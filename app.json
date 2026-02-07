@@ -1,30 +1,34 @@
 {
   "expo": {
-    "name": "shopping-list",
+    "name": "Shopping List",
     "slug": "shopping-list",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/shopping-list.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/shopping-list.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#E5E5CD"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.feub.shoppinglist"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/shopping-list.png",
+        "backgroundColor": "#E5E5CD"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "package": "com.feub.shoppinglist"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/shopping-list.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "36d6377d-6aab-46d3-a94a-a8c54572f21e"
+      }
     }
   }
 }

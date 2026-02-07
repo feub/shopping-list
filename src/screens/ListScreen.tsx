@@ -1,0 +1,323 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Alert, ScrollView, RefreshControl } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../hooks/useTheme';
+import { useAuth } from '../context/AuthContext';
+import { useList } from '../hooks/useList';
+import { ListsService } from '../services/supabase';
+import { DraggableList } from '../components/list/DraggableList';
+import { SwipeableItem } from '../components/list/SwipeableItem';
+import { AddItemInput } from '../components/list/AddItemInput';
+import { ShareListModal } from '../components/list/ShareListModal';
+import { ListSelectorModal } from '../components/list/ListSelectorModal';
+import type { MainTabScreenProps } from '../navigation/types';
+import type { Item } from '../types/models';
+
+export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation }) => {
+  const { theme } = useTheme();
+  const { user } = useAuth();
+  const [currentListId, setCurrentListId] = useState<string | null>(null);
+  const [initLoading, setInitLoading] = useState(true);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [listSelectorVisible, setListSelectorVisible] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<'viewer' | 'editor' | 'owner'>('owner');
+  const [memberCount, setMemberCount] = useState(1);
+
+  const {
+    unboughtItems,
+    boughtItems,
+    loading,
+    error,
+    addItem,
+    toggleItem,
+    deleteItem,
+    reorderItems,
+    clearBoughtItems,
+    refetch,
+  } = useList(currentListId || '');
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Initialize or get the user's primary list
+  useEffect(() => {
+    const initializeList = async () => {
+      console.log('[ListScreen] initializeList called, user:', user?.id);
+      if (!user) {
+        console.log('[ListScreen] No user, returning early');
+        return;
+      }
+
+      setInitLoading(true);
+      console.log('[ListScreen] Fetching lists for user:', user.id);
+
+      // Get user's lists
+      const { data: lists } = await ListsService.getUserLists(user.id);
+
+      console.log('[ListScreen] getUserLists returned:', {
+        listsCount: lists?.length || 0,
+        lists: lists?.map(l => ({ id: l.id, name: l.name }))
+      });
+
+      if (lists && lists.length > 0) {
+        // Use the first list (most recently updated)
+        console.log('[ListScreen] Using existing list:', lists[0].id);
+        setCurrentListId(lists[0].id);
+      } else {
+        // Create a default list
+        console.log('[ListScreen] No lists found, creating default list');
+        const { data: newList } = await ListsService.createList(
+          user.id,
+          'My Shopping List'
+        );
+        if (newList) {
+          console.log('[ListScreen] Created new list:', newList.id);
+          setCurrentListId(newList.id);
+        }
+      }
+
+      setInitLoading(false);
+    };
+
+    initializeList();
+  }, [user]);
+
+  // Fetch user's role and member count
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!currentListId || !user) return;
+
+      const { data: members } = await ListsService.getListMembers(currentListId);
+
+      if (members) {
+        setMemberCount(members.length);
+
+        const currentMember = members.find((m: any) => m.user_id === user.id);
+        if (currentMember) {
+          setCurrentUserRole(currentMember.role);
+        }
+      }
+    };
+
+    fetchUserRole();
+  }, [currentListId, user]);
+
+  // Set up header with list selector and share buttons
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => setListSelectorVisible(true)}
+          style={{ marginLeft: 16 }}
+        >
+          <Ionicons name="list" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
+      ),
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => setShareModalVisible(true)}
+          style={{ marginRight: 16, position: 'relative' }}
+        >
+          <Ionicons name="people-outline" size={24} color={theme.colors.text} />
+          {memberCount > 1 && (
+            <View
+              style={{
+                position: 'absolute',
+                top: -4,
+                right: -4,
+                backgroundColor: theme.colors.primary,
+                borderRadius: 10,
+                minWidth: 20,
+                height: 20,
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingHorizontal: 4,
+              }}
+            >
+              <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: 'bold' }}>
+                {memberCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, theme, memberCount]);
+
+  // Refresh when tab comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (currentListId) {
+        refetch();
+      }
+    }, [currentListId, refetch])
+  );
+
+  // Handle pull-to-refresh
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
+
+  const handleAddItem = (text: string, quantity?: string) => {
+    addItem(text, quantity);
+  };
+
+  const handleClearBought = () => {
+    if (boughtItems.length === 0) return;
+
+    Alert.alert(
+      'Clear Bought Items',
+      `Remove ${boughtItems.length} bought item${boughtItems.length === 1 ? '' : 's'}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear', style: 'destructive', onPress: clearBoughtItems },
+      ]
+    );
+  };
+
+  if (initLoading || !currentListId) {
+    return (
+      <View style={[styles.centerContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.centerContainer, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.errorText, { color: theme.colors.error, fontSize: theme.fontSizes.body }]}>
+          Error loading list
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Add item input - at top for better UX */}
+      <AddItemInput onAdd={handleAddItem} disabled={loading} />
+
+      {loading && unboughtItems.length === 0 && boughtItems.length === 0 ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      ) : (
+        <>
+          {/* Unbought items - draggable */}
+          <View style={styles.listContainer}>
+            <DraggableList
+              items={unboughtItems}
+              onReorder={reorderItems}
+              onToggle={toggleItem}
+              onDelete={deleteItem}
+            />
+          </View>
+
+          {/* Bought items section */}
+          {boughtItems.length > 0 && (
+            <View style={[styles.boughtSection, { borderTopColor: theme.colors.border }]}>
+              <View style={styles.boughtHeader}>
+                <Text style={[styles.boughtTitle, { color: theme.colors.textSecondary, fontSize: theme.fontSizes.body }]}>
+                  Bought ({boughtItems.length})
+                </Text>
+                <TouchableOpacity onPress={handleClearBought}>
+                  <Text style={[styles.clearButton, { color: theme.colors.primary, fontSize: theme.fontSizes.small }]}>
+                    Clear
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <FlatList
+                data={boughtItems}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <SwipeableItem
+                    item={item}
+                    onToggle={toggleItem}
+                    onDelete={deleteItem}
+                  />
+                )}
+                style={{ maxHeight: 200 }}
+              />
+            </View>
+          )}
+
+          {/* Empty state */}
+          {unboughtItems.length === 0 && boughtItems.length === 0 && (
+            <View style={styles.emptyContainer}>
+              <Text style={[styles.emptyText, { color: theme.colors.textSecondary, fontSize: theme.fontSizes.body }]}>
+                No items yet. Add your first item above!
+              </Text>
+            </View>
+          )}
+        </>
+      )}
+
+      {/* List Selector Modal */}
+      {user && (
+        <ListSelectorModal
+          visible={listSelectorVisible}
+          onClose={() => setListSelectorVisible(false)}
+          currentListId={currentListId || ''}
+          onSelectList={setCurrentListId}
+          userId={user.id}
+        />
+      )}
+
+      {/* Share List Modal */}
+      {currentListId && (
+        <ShareListModal
+          visible={shareModalVisible}
+          onClose={() => setShareModalVisible(false)}
+          listId={currentListId}
+          currentUserRole={currentUserRole}
+        />
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  listContainer: {
+    flex: 1,
+  },
+  boughtSection: {
+    borderTopWidth: 2,
+    maxHeight: 250,
+  },
+  boughtHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  boughtTitle: {
+    fontWeight: '600',
+  },
+  clearButton: {
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyText: {
+    textAlign: 'center',
+  },
+  errorText: {
+    textAlign: 'center',
+  },
+});
