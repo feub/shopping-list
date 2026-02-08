@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import type { Item } from '../../types/models';
 
@@ -7,9 +7,11 @@ interface ListItemProps {
   item: Item;
   onToggle: (itemId: string, isBought: boolean) => void;
   onPress?: (item: Item) => void;
+  drag?: () => void;
+  isActive?: boolean;
 }
 
-export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onPress }) => {
+export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onPress, drag, isActive }) => {
   const { theme } = useTheme();
 
   const handleToggle = () => {
@@ -28,6 +30,12 @@ export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onPress }) =
         styles.wrapper,
         {
           backgroundColor: theme.colors.card,
+          ...(isActive && {
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
+            elevation: 8,
+            transform: [{ scale: 1.02 }],
+          }),
         },
       ]}
     >
@@ -36,12 +44,17 @@ export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onPress }) =
         onPress={handlePress}
         activeOpacity={onPress ? 0.7 : 1}
       >
-        {/* Drag handle icon - will be functional with development build */}
-        <View style={[styles.dragHandle, { opacity: 0.3 }]}>
+        {/* Drag handle - long press to drag */}
+        <Pressable
+          onLongPress={drag}
+          delayLongPress={150}
+          style={[styles.dragHandle, { opacity: drag ? 0.5 : 0.3 }]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <View style={[styles.dragLine, { backgroundColor: theme.colors.textSecondary }]} />
           <View style={[styles.dragLine, { backgroundColor: theme.colors.textSecondary }]} />
           <View style={[styles.dragLine, { backgroundColor: theme.colors.textSecondary }]} />
-        </View>
+        </Pressable>
 
         <TouchableOpacity
           style={[
@@ -144,6 +157,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 4,
   },
   dragLine: {
     width: 18,

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { useTheme } from '../../hooks/useTheme';
 import { ListItem } from './ListItem';
@@ -10,6 +10,8 @@ interface SwipeableItemProps {
   onToggle: (itemId: string, isBought: boolean) => void;
   onDelete: (itemId: string) => void;
   onPress?: (item: Item) => void;
+  drag?: () => void;
+  isActive?: boolean;
 }
 
 export const SwipeableItem: React.FC<SwipeableItemProps> = ({
@@ -17,6 +19,8 @@ export const SwipeableItem: React.FC<SwipeableItemProps> = ({
   onToggle,
   onDelete,
   onPress,
+  drag,
+  isActive,
 }) => {
   const { theme } = useTheme();
   const swipeableRef = useRef<Swipeable>(null);
@@ -59,8 +63,9 @@ export const SwipeableItem: React.FC<SwipeableItemProps> = ({
       renderRightActions={renderRightActions}
       overshootLeft={false}
       overshootRight={false}
+      enabled={!isActive}
     >
-      <ListItem item={item} onToggle={onToggle} onPress={onPress} />
+      <ListItem item={item} onToggle={onToggle} onPress={onPress} drag={drag} isActive={isActive} />
     </Swipeable>
   );
 };
