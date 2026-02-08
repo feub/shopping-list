@@ -11,6 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../context/AuthContext';
 import { FavoritesService, ListsService } from '../services/supabase';
@@ -31,11 +32,18 @@ export const FavoritesScreen: React.FC<MainTabScreenProps<'Favorites'>> = () => 
   const [newItemNotes, setNewItemNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Get user's current list
+  // Get user's current default list from AsyncStorage
   useEffect(() => {
     const getCurrentList = async () => {
       if (!user) return;
 
+      const savedListId = await AsyncStorage.getItem('default_list_id');
+      if (savedListId) {
+        setCurrentListId(savedListId);
+        return;
+      }
+
+      // Fallback to first list if no default saved
       const { data: lists } = await ListsService.getUserLists(user.id);
       if (lists && lists.length > 0) {
         setCurrentListId(lists[0].id);
@@ -65,6 +73,12 @@ export const FavoritesScreen: React.FC<MainTabScreenProps<'Favorites'>> = () => 
   useFocusEffect(
     useCallback(() => {
       fetchFavorites();
+      // Refresh default list ID in case user switched lists
+      AsyncStorage.getItem('default_list_id').then((savedListId) => {
+        if (savedListId) {
+          setCurrentListId(savedListId);
+        }
+      });
     }, [fetchFavorites])
   );
 
