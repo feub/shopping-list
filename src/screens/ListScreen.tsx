@@ -177,7 +177,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
   }, [refetch]);
 
   const handleAddItem = (text: string, quantity?: string) => {
-    addItem(text, quantity);
+    addItem(text, quantity, undefined, user?.email || undefined);
   };
 
   const handleClearBought = () => {
