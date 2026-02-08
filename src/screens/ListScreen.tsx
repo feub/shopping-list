@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Alert, ScrollView, RefreshControl } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
@@ -13,6 +14,8 @@ import { ShareListModal } from '../components/list/ShareListModal';
 import { ListSelectorModal } from '../components/list/ListSelectorModal';
 import type { MainTabScreenProps } from '../navigation/types';
 import type { Item } from '../types/models';
+
+const DEFAULT_LIST_KEY = 'default_list_id';
 
 export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation }) => {
   const { theme } = useTheme();
@@ -61,10 +64,20 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
       });
 
       if (lists && lists.length > 0) {
-        // Use the first list (most recently updated)
-        console.log('[ListScreen] Using existing list:', lists[0].id);
-        setCurrentListId(lists[0].id);
-        setListName(lists[0].name);
+        // Check for a saved default list
+        const savedListId = await AsyncStorage.getItem(DEFAULT_LIST_KEY);
+        const savedList = savedListId ? lists.find(l => l.id === savedListId) : null;
+
+        if (savedList) {
+          console.log('[ListScreen] Using saved default list:', savedList.id);
+          setCurrentListId(savedList.id);
+          setListName(savedList.name);
+        } else {
+          // Fall back to the first list (most recently updated)
+          console.log('[ListScreen] Using first list:', lists[0].id);
+          setCurrentListId(lists[0].id);
+          setListName(lists[0].name);
+        }
       } else {
         // Create a default list
         console.log('[ListScreen] No lists found, creating default list');
@@ -273,6 +286,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
           currentListId={currentListId || ''}
           onSelectList={async (listId) => {
             setCurrentListId(listId);
+            await AsyncStorage.setItem(DEFAULT_LIST_KEY, listId);
             const { data } = await ListsService.getListById(listId);
             if (data) setListName(data.name);
           }}
