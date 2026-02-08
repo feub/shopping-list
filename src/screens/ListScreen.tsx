@@ -23,6 +23,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
   const [listSelectorVisible, setListSelectorVisible] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<'viewer' | 'editor' | 'owner'>('owner');
   const [memberCount, setMemberCount] = useState(1);
+  const [listName, setListName] = useState('Shopping List');
 
   const {
     unboughtItems,
@@ -63,6 +64,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
         // Use the first list (most recently updated)
         console.log('[ListScreen] Using existing list:', lists[0].id);
         setCurrentListId(lists[0].id);
+        setListName(lists[0].name);
       } else {
         // Create a default list
         console.log('[ListScreen] No lists found, creating default list');
@@ -105,6 +107,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
   // Set up header with list selector and share buttons
   useEffect(() => {
     navigation.setOptions({
+      headerTitle: listName,
       headerLeft: () => (
         <TouchableOpacity
           onPress={() => setListSelectorVisible(true)}
@@ -142,7 +145,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
         </TouchableOpacity>
       ),
     });
-  }, [navigation, theme, memberCount]);
+  }, [navigation, theme, memberCount, listName]);
 
   // Refresh when tab comes into focus
   useFocusEffect(
@@ -259,9 +262,20 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
       {user && (
         <ListSelectorModal
           visible={listSelectorVisible}
-          onClose={() => setListSelectorVisible(false)}
+          onClose={async () => {
+            setListSelectorVisible(false);
+            // Refresh list name in case it was renamed
+            if (currentListId) {
+              const { data } = await ListsService.getListById(currentListId);
+              if (data) setListName(data.name);
+            }
+          }}
           currentListId={currentListId || ''}
-          onSelectList={setCurrentListId}
+          onSelectList={async (listId) => {
+            setCurrentListId(listId);
+            const { data } = await ListsService.getListById(listId);
+            if (data) setListName(data.name);
+          }}
           userId={user.id}
         />
       )}
