@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../context/AuthContext';
 import type { AuthStackScreenProps } from '../navigation/types';
@@ -32,6 +32,11 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'Login'>> = ({ navigatio
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.content}>
+        <Image
+          source={require('../../assets/shopping-list.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={[styles.title, { color: theme.colors.text, fontSize: theme.fontSizes.h1 }]}>
           Welcome Back
         </Text>
@@ -94,15 +99,6 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'Login'>> = ({ navigatio
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.linkButton}
-          onPress={() => navigation.navigate('Signup')}
-          disabled={loading}
-        >
-          <Text style={[styles.linkText, { color: theme.colors.primary, fontSize: theme.fontSizes.body }]}>
-            Don't have an account? Sign Up
-          </Text>
-        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -235,6 +231,13 @@ export const SignupScreen: React.FC<AuthStackScreenProps<'Signup'>> = ({ navigat
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    alignSelf: 'center',
+    marginBottom: 16,
+    borderRadius: 24,
   },
   content: {
     flex: 1,
