@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -285,6 +287,7 @@ export const CreateSavedListModal: React.FC<CreateSavedListModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   header: {
     flexDirection: 'row',
