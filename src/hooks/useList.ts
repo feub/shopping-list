@@ -37,7 +37,7 @@ export const useList = (listId: string) => {
         updatedAt: item.updated_at,
         deletedAt: item.deleted_at || undefined,
         createdBy: item.created_by || undefined,
-        createdByName: item.profiles?.display_name || undefined,
+        createdByName: item.profiles?.display_name || item.profiles?.email || undefined,
       }));
       setItems(mappedItems);
     }
@@ -108,7 +108,7 @@ export const useList = (listId: string) => {
   }, [listId]);
 
   // Add a new item
-  const addItem = useCallback(async (text: string, quantity?: string, notes?: string) => {
+  const addItem = useCallback(async (text: string, quantity?: string, notes?: string, currentUserName?: string) => {
     if (!listId) return;
 
     isPerformingOperation.current = true;
@@ -142,6 +142,8 @@ export const useList = (listId: string) => {
         createdAt: data.created_at,
         updatedAt: data.updated_at,
         deletedAt: data.deleted_at || undefined,
+        createdBy: data.created_by || undefined,
+        createdByName: (data as any).profiles?.display_name || (data as any).profiles?.email || currentUserName || undefined,
       };
       setItems(prev => [...prev, newItem]);
     }
