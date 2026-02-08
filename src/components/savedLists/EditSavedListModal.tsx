@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Platform,
   StatusBar,
+  Switch,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -45,6 +46,7 @@ interface EditSavedListModalProps {
     description: string | null,
     items: SavedListItemInput[]
   ) => Promise<void>;
+  onAddToCurrentList?: (text: string, quantity: string) => Promise<void>;
 }
 
 export const EditSavedListModal: React.FC<EditSavedListModalProps> = ({
@@ -52,6 +54,7 @@ export const EditSavedListModal: React.FC<EditSavedListModalProps> = ({
   savedList,
   onClose,
   onSave,
+  onAddToCurrentList,
 }) => {
   const { theme } = useTheme();
   const [name, setName] = useState('');
@@ -61,6 +64,7 @@ export const EditSavedListModal: React.FC<EditSavedListModalProps> = ({
   const [currentItemQuantity, setCurrentItemQuantity] = useState('1');
   const [currentItemNotes, setCurrentItemNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [alsoAddToCurrentList, setAlsoAddToCurrentList] = useState(false);
 
   // Load saved list data when modal opens
   useEffect(() => {
@@ -79,7 +83,7 @@ export const EditSavedListModal: React.FC<EditSavedListModalProps> = ({
     }
   }, [savedList, visible]);
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!currentItemText.trim()) {
       Alert.alert('Error', 'Please enter an item name');
       return;
@@ -93,6 +97,12 @@ export const EditSavedListModal: React.FC<EditSavedListModalProps> = ({
     };
 
     setItems([...items, newItem]);
+
+    // Also add to current shopping list if checkbox is checked
+    if (alsoAddToCurrentList && onAddToCurrentList) {
+      await onAddToCurrentList(currentItemText.trim(), currentItemQuantity);
+    }
+
     setCurrentItemText('');
     setCurrentItemQuantity('1');
     setCurrentItemNotes('');
@@ -339,6 +349,20 @@ export const EditSavedListModal: React.FC<EditSavedListModalProps> = ({
               </View>
             </View>
 
+            {onAddToCurrentList && (
+              <View style={styles.checkboxRow}>
+                <Switch
+                  value={alsoAddToCurrentList}
+                  onValueChange={setAlsoAddToCurrentList}
+                  trackColor={{ false: theme.colors.border, true: theme.colors.primaryLight }}
+                  thumbColor={alsoAddToCurrentList ? theme.colors.primary : theme.colors.textTertiary}
+                />
+                <Text style={[styles.checkboxLabel, { color: theme.colors.text, fontSize: theme.fontSizes.small }]}>
+                  Also add to current shopping list
+                </Text>
+              </View>
+            )}
+
             <TouchableOpacity
               style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
               onPress={handleAddItem}
@@ -417,6 +441,15 @@ const styles = StyleSheet.create({
   },
   quantityInput: {
     textAlign: 'center',
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 8,
+  },
+  checkboxLabel: {
+    flex: 1,
   },
   addButton: {
     marginTop: 12,

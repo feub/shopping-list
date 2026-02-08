@@ -8,9 +8,10 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../context/AuthContext';
-import { SavedListsService, ListsService } from '../services/supabase';
+import { SavedListsService, ListsService, ItemsService } from '../services/supabase';
 import { CreateSavedListModal } from '../components/savedLists/CreateSavedListModal';
 import { EditSavedListModal } from '../components/savedLists/EditSavedListModal';
 import type { MainTabScreenProps } from '../navigation/types';
@@ -68,6 +69,13 @@ export const SavedListsScreen: React.FC<MainTabScreenProps<'SavedLists'>> = () =
   const fetchCurrentList = async () => {
     if (!user) return;
 
+    const savedListId = await AsyncStorage.getItem('default_list_id');
+    if (savedListId) {
+      setCurrentListId(savedListId);
+      return;
+    }
+
+    // Fallback to first list if no default saved
     const { data: lists } = await ListsService.getUserLists(user.id);
     if (lists && lists.length > 0) {
       setCurrentListId(lists[0].id);
@@ -135,6 +143,24 @@ export const SavedListsScreen: React.FC<MainTabScreenProps<'SavedLists'>> = () =
     } else {
       Alert.alert('Success', 'Saved list created!');
       fetchSavedLists();
+    }
+  };
+
+  const handleAddToCurrentList = async (text: string, quantity: string) => {
+    if (!currentListId) return;
+
+    const { data: existingItems } = await ItemsService.getListItems(currentListId);
+    const orderIndex = existingItems?.length || 0;
+
+    const { error } = await ItemsService.createItem({
+      listId: currentListId,
+      text,
+      quantity,
+      orderIndex,
+    });
+
+    if (error) {
+      Alert.alert('Error', 'Failed to add item to current list');
     }
   };
 
@@ -281,6 +307,7 @@ export const SavedListsScreen: React.FC<MainTabScreenProps<'SavedLists'>> = () =
         savedList={editingSavedList}
         onClose={() => setEditingSavedList(null)}
         onSave={handleUpdateSavedList}
+        onAddToCurrentList={currentListId ? handleAddToCurrentList : undefined}
       />
     </View>
   );
