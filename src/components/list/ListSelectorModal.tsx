@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
-import { ListsService } from '../../services/supabase';
+import { ListsService, ItemsService } from '../../services/supabase';
 import type { List } from '../../types/models';
 
 interface ListSelectorModalProps {
@@ -93,8 +93,7 @@ export const ListSelectorModal: React.FC<ListSelectorModalProps> = ({
     setCreatingList(false);
     setNewListName('');
     if (newList) {
-      onSelectList(newList.id);
-      onClose();
+      handleSelectList(newList.id);
     }
   };
 
@@ -120,6 +119,37 @@ export const ListSelectorModal: React.FC<ListSelectorModalProps> = ({
     setEditingListId(null);
     setEditingName('');
     await loadLists();
+  };
+
+  const handleDeleteList = async (list: List) => {
+    if (list.id === currentListId) return;
+
+    // Check if the list has items
+    const { data: items } = await ItemsService.getListItems(list.id);
+    if (items && items.length > 0) {
+      Alert.alert('Cannot Delete', 'This list still has items. Remove all items before deleting.');
+      return;
+    }
+
+    Alert.alert(
+      'Delete List',
+      `Are you sure you want to delete "${list.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const { error } = await ListsService.deleteList(list.id);
+            if (error) {
+              Alert.alert('Error', 'Failed to delete list');
+              return;
+            }
+            await loadLists();
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -302,6 +332,14 @@ export const ListSelectorModal: React.FC<ListSelectorModalProps> = ({
                           >
                             <Ionicons name="pencil-outline" size={18} color={theme.colors.textSecondary} />
                           </TouchableOpacity>
+                          {!isSelected && (
+                            <TouchableOpacity
+                              onPress={() => handleDeleteList(list)}
+                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                              <Ionicons name="trash-outline" size={18} color={theme.colors.error} />
+                            </TouchableOpacity>
+                          )}
                           {isSelected && (
                             <Ionicons
                               name="checkmark-circle"
