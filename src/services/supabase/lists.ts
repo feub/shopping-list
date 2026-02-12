@@ -106,40 +106,36 @@ export class ListsService {
     try {
       validateListName(name);
 
-      // Create the list
-      const { data: list, error: listError } = await supabase
-        .from('lists')
-        .insert({
-          name: sanitizeListName(name),
-          description: description ? sanitizeText(description) : null,
-          created_by: userId,
-          version: 1,
-        })
-        .select()
-        .single();
+      const sanitizedName = sanitizeListName(name);
+      const sanitizedDesc = description ? sanitizeText(description) : null;
 
-      if (listError) {
-        Logger.error('Error creating list:', listError);
-        throw listError;
-      }
-
-      // Add the creator as owner
-      const { error: memberError } = await supabase
-        .from('list_members')
-        .insert({
-          list_id: list.id,
-          user_id: userId,
-          role: 'owner',
+      // Use RPC function to create list + owner membership atomically
+      // This bypasses the RLS chicken-and-egg problem where INSERT needs
+      // list_members for SELECT RLS, but list_members needs the list ID first
+      const { data: listId, error: rpcError } = await supabase
+        .rpc('create_list_with_owner', {
+          p_name: sanitizedName,
+          p_description: sanitizedDesc,
         });
 
-      if (memberError) {
-        Logger.error('Error adding list owner:', memberError);
-        // Clean up the list if member creation failed
-        await supabase.from('lists').delete().eq('id', list.id);
-        throw memberError;
+      if (rpcError) {
+        Logger.error('Error creating list:', rpcError);
+        throw rpcError;
       }
 
-      Logger.log('List created successfully:', list.id);
+      // Fetch the created list
+      const { data: list, error: fetchError } = await supabase
+        .from('lists')
+        .select('*')
+        .eq('id', listId)
+        .single();
+
+      if (fetchError) {
+        Logger.error('Error fetching created list:', fetchError);
+        throw fetchError;
+      }
+
+      Logger.log('List created successfully:', listId);
       return { data: list, error: null };
     } catch (error) {
       Logger.error('Failed to create list:', error);
@@ -186,13 +182,25 @@ export class ListsService {
   }
 
   /**
-   * Delete a list (soft delete)
+   * Delete a list and its memberships
    */
   static async deleteList(listId: string) {
     try {
+      // Remove all list members first
+      const { error: membersError } = await supabase
+        .from('list_members')
+        .delete()
+        .eq('list_id', listId);
+
+      if (membersError) {
+        Logger.error('Error deleting list members:', membersError);
+        throw membersError;
+      }
+
+      // Delete the list
       const { error } = await supabase
         .from('lists')
-        .update({ deleted_at: new Date().toISOString() })
+        .delete()
         .eq('id', listId);
 
       if (error) {

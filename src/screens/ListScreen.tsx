@@ -97,10 +97,13 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
     initializeList();
   }, [user]);
 
-  // Fetch user's role and member count
+  // Fetch list name, user's role, and member count when list changes
   useEffect(() => {
-    const fetchUserRole = async () => {
+    const fetchListDetails = async () => {
       if (!currentListId || !user) return;
+
+      const { data: listData } = await ListsService.getListById(currentListId);
+      if (listData) setListName(listData.name);
 
       const { data: members } = await ListsService.getListMembers(currentListId);
 
@@ -114,8 +117,8 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
       }
     };
 
-    fetchUserRole();
-  }, [currentListId, user]);
+    fetchListDetails();
+  }, [currentListId, user, listSelectorVisible]);
 
   // Set up header with list selector and share buttons
   useEffect(() => {
@@ -275,20 +278,11 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
       {user && (
         <ListSelectorModal
           visible={listSelectorVisible}
-          onClose={async () => {
-            setListSelectorVisible(false);
-            // Refresh list name in case it was renamed
-            if (currentListId) {
-              const { data } = await ListsService.getListById(currentListId);
-              if (data) setListName(data.name);
-            }
-          }}
+          onClose={() => setListSelectorVisible(false)}
           currentListId={currentListId || ''}
           onSelectList={async (listId) => {
             setCurrentListId(listId);
             await AsyncStorage.setItem(DEFAULT_LIST_KEY, listId);
-            const { data } = await ListsService.getListById(listId);
-            if (data) setListName(data.name);
           }}
           userId={user.id}
         />
