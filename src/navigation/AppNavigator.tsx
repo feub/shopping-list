@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, StatusBar, View } from 'react-native';
 import { MainTabNavigator } from './MainTabNavigator';
 import { AuthNavigator } from './AuthNavigator';
 import { EditSavedListScreen } from '../screens/EditSavedListScreen';
@@ -41,6 +41,7 @@ export const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer theme={navigationTheme}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           <>
