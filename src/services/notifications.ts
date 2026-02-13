@@ -21,16 +21,20 @@ export class NotificationService {
    */
   static async registerForPushNotifications(userId: string): Promise<void> {
     try {
+      console.log('[Notifications] Starting registration for user:', userId);
+
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
+      console.log('[Notifications] Existing permission status:', existingStatus);
 
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
+        console.log('[Notifications] Requested permission, got:', status);
       }
 
       if (finalStatus !== 'granted') {
-        Logger.log('Push notification permission not granted');
+        console.log('[Notifications] Permission not granted, aborting');
         return;
       }
 
@@ -42,14 +46,16 @@ export class NotificationService {
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#FF8C00',
         });
+        console.log('[Notifications] Android channel created');
       }
 
+      console.log('[Notifications] Requesting Expo push token...');
       const tokenData = await Notifications.getExpoPushTokenAsync({
         projectId: '36d6377d-6aab-46d3-a94a-a8c54572f21e',
       });
 
       const pushToken = tokenData.data;
-      Logger.log('Expo push token obtained');
+      console.log('[Notifications] Token obtained:', pushToken);
 
       // Store token in profiles table
       const { error } = await (supabase
@@ -58,10 +64,12 @@ export class NotificationService {
         .eq('id', userId);
 
       if (error) {
-        Logger.error('Failed to store push token:', error);
+        console.error('[Notifications] Failed to store token:', JSON.stringify(error));
+      } else {
+        console.log('[Notifications] Token stored successfully');
       }
     } catch (error) {
-      Logger.error('Failed to register for push notifications:', error);
+      console.error('[Notifications] Registration failed:', error);
     }
   }
 
