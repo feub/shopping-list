@@ -13,6 +13,7 @@ import { AddItemInput } from '../components/list/AddItemInput';
 import { ShareListModal } from '../components/list/ShareListModal';
 import { ListSelectorModal } from '../components/list/ListSelectorModal';
 import type { MainTabScreenProps } from '../navigation/types';
+import { NotificationService } from '../services/notifications';
 import type { Item } from '../types/models';
 
 const DEFAULT_LIST_KEY = 'default_list_id';
@@ -180,8 +181,20 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
     setRefreshing(false);
   }, [refetch]);
 
-  const handleAddItem = (text: string, quantity?: string, isImportant?: boolean) => {
-    addItem(text, quantity, undefined, user?.email || undefined, isImportant);
+  const handleAddItem = async (text: string, quantity?: string, isImportant?: boolean) => {
+    await addItem(text, quantity, undefined, user?.email || undefined, isImportant);
+
+    // Fire-and-forget: notify other list members
+    if (currentListId && user) {
+      const displayName = user.email?.split('@')[0] || 'Someone';
+      NotificationService.notifyListMembers(
+        currentListId,
+        user.id,
+        displayName,
+        text,
+        listName,
+      );
+    }
   };
 
   const handleToggleImportant = (itemId: string, isImportant: boolean) => {
