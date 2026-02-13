@@ -34,6 +34,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
     loading,
     error,
     addItem,
+    updateItem,
     toggleItem,
     deleteItem,
     reorderItems,
@@ -179,8 +180,12 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
     setRefreshing(false);
   }, [refetch]);
 
-  const handleAddItem = (text: string, quantity?: string) => {
-    addItem(text, quantity, undefined, user?.email || undefined);
+  const handleAddItem = (text: string, quantity?: string, isImportant?: boolean) => {
+    addItem(text, quantity, undefined, user?.email || undefined, isImportant);
+  };
+
+  const handleToggleImportant = (itemId: string, isImportant: boolean) => {
+    updateItem(itemId, { isImportant });
   };
 
   const handleClearBought = () => {
@@ -231,6 +236,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
               items={unboughtItems}
               onReorder={reorderItems}
               onToggle={toggleItem}
+              onToggleImportant={handleToggleImportant}
               onDelete={deleteItem}
             />
           </View>

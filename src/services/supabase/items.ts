@@ -14,6 +14,7 @@ export interface CreateItemData {
   quantity?: string;
   notes?: string;
   orderIndex: number;
+  isImportant?: boolean;
 }
 
 export interface UpdateItemData {
@@ -22,6 +23,7 @@ export interface UpdateItemData {
   notes?: string;
   isBought?: boolean;
   orderIndex?: number;
+  isImportant?: boolean;
 }
 
 export class ItemsService {
@@ -82,7 +84,7 @@ export class ItemsService {
   /**
    * Create a new item
    */
-  static async createItem({ listId, text, quantity, notes, orderIndex }: CreateItemData) {
+  static async createItem({ listId, text, quantity, notes, orderIndex, isImportant }: CreateItemData) {
     try {
       validateItemText(text);
       if (quantity) {
@@ -101,6 +103,7 @@ export class ItemsService {
           notes: notes ? sanitizeText(notes) : null,
           order_index: orderIndex,
           is_bought: false,
+          is_important: isImportant || false,
           version: 1,
           created_by: user?.id || null,
         })
@@ -159,6 +162,10 @@ export class ItemsService {
 
       if (updates.orderIndex !== undefined) {
         updateData.order_index = updates.orderIndex;
+      }
+
+      if (updates.isImportant !== undefined) {
+        updateData.is_important = updates.isImportant;
       }
 
       const { data, error } = await supabase

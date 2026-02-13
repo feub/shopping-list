@@ -8,6 +8,7 @@ import type { Item } from '../../types/models';
 interface SwipeableItemProps {
   item: Item;
   onToggle: (itemId: string, isBought: boolean) => void;
+  onToggleImportant?: (itemId: string, isImportant: boolean) => void;
   onDelete: (itemId: string) => void;
   onPress?: (item: Item) => void;
   drag?: () => void;
@@ -17,6 +18,7 @@ interface SwipeableItemProps {
 export const SwipeableItem: React.FC<SwipeableItemProps> = ({
   item,
   onToggle,
+  onToggleImportant,
   onDelete,
   onPress,
   drag,
@@ -65,7 +67,7 @@ export const SwipeableItem: React.FC<SwipeableItemProps> = ({
       overshootRight={false}
       enabled={!isActive}
     >
-      <ListItem item={item} onToggle={onToggle} onPress={onPress} drag={drag} isActive={isActive} />
+      <ListItem item={item} onToggle={onToggle} onToggleImportant={onToggleImportant} onPress={onPress} drag={drag} isActive={isActive} />
     </Swipeable>
   );
 };

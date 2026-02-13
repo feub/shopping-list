@@ -3,7 +3,7 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingVi
 import { useTheme } from '../../hooks/useTheme';
 
 interface AddItemInputProps {
-  onAdd: (text: string, quantity?: string) => void;
+  onAdd: (text: string, quantity?: string, isImportant?: boolean) => void;
   disabled?: boolean;
 }
 
@@ -12,13 +12,15 @@ export const AddItemInput: React.FC<AddItemInputProps> = ({ onAdd, disabled }) =
   const [text, setText] = useState('');
   const [quantity, setQuantity] = useState('');
   const [showQuantity, setShowQuantity] = useState(false);
+  const [isImportant, setIsImportant] = useState(false);
 
   const handleAdd = () => {
     if (text.trim()) {
-      onAdd(text.trim(), quantity.trim() || undefined);
+      onAdd(text.trim(), quantity.trim() || undefined, isImportant || undefined);
       setText('');
       setQuantity('');
       setShowQuantity(false);
+      setIsImportant(false);
     }
   };
 
@@ -94,6 +96,30 @@ export const AddItemInput: React.FC<AddItemInputProps> = ({ onAdd, disabled }) =
             ]}
           >
             Qty
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.quantityButton,
+            {
+              backgroundColor: isImportant ? theme.colors.warning : theme.colors.background,
+              borderColor: theme.colors.border,
+            },
+          ]}
+          onPress={() => setIsImportant(!isImportant)}
+          disabled={disabled}
+        >
+          <Text
+            style={[
+              styles.quantityButtonText,
+              {
+                color: isImportant ? '#FFFFFF' : theme.colors.textSecondary,
+                fontSize: theme.fontSizes.body,
+              },
+            ]}
+          >
+            !
           </Text>
         </TouchableOpacity>
 

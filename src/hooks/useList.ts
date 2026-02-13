@@ -31,6 +31,7 @@ export const useList = (listId: string) => {
         quantity: item.quantity || undefined,
         notes: item.notes || undefined,
         isBought: item.is_bought,
+        isImportant: item.is_important || false,
         orderIndex: item.order_index,
         version: item.version,
         createdAt: item.created_at,
@@ -71,6 +72,7 @@ export const useList = (listId: string) => {
         quantity: dbItem.quantity || undefined,
         notes: dbItem.notes || undefined,
         isBought: dbItem.is_bought,
+        isImportant: dbItem.is_important || false,
         orderIndex: dbItem.order_index,
         version: dbItem.version,
         createdAt: dbItem.created_at,
@@ -108,7 +110,7 @@ export const useList = (listId: string) => {
   }, [listId]);
 
   // Add a new item
-  const addItem = useCallback(async (text: string, quantity?: string, notes?: string, currentUserName?: string) => {
+  const addItem = useCallback(async (text: string, quantity?: string, notes?: string, currentUserName?: string, isImportant?: boolean) => {
     if (!listId) return;
 
     isPerformingOperation.current = true;
@@ -120,6 +122,7 @@ export const useList = (listId: string) => {
       quantity,
       notes,
       orderIndex,
+      isImportant,
     });
 
     if (createError) {
@@ -137,6 +140,7 @@ export const useList = (listId: string) => {
         quantity: data.quantity || undefined,
         notes: data.notes || undefined,
         isBought: data.is_bought,
+        isImportant: data.is_important || false,
         orderIndex: data.order_index,
         version: data.version,
         createdAt: data.created_at,
@@ -172,6 +176,7 @@ export const useList = (listId: string) => {
         quantity: data.quantity || undefined,
         notes: data.notes || undefined,
         isBought: data.is_bought,
+        isImportant: data.is_important || false,
         orderIndex: data.order_index,
         version: data.version,
         createdAt: data.created_at,
@@ -203,6 +208,7 @@ export const useList = (listId: string) => {
         quantity: data.quantity || undefined,
         notes: data.notes || undefined,
         isBought: data.is_bought,
+        isImportant: data.is_important || false,
         orderIndex: data.order_index,
         version: data.version,
         createdAt: data.created_at,
@@ -273,8 +279,13 @@ export const useList = (listId: string) => {
     setItems(prev => prev.filter(item => !item.isBought));
   }, [listId]);
 
-  // Get items separated by bought status
-  const unboughtItems = items.filter(item => !item.isBought);
+  // Get items separated by bought status, with important items first
+  const unboughtItems = items
+    .filter(item => !item.isBought)
+    .sort((a, b) => {
+      if (a.isImportant !== b.isImportant) return a.isImportant ? -1 : 1;
+      return a.orderIndex - b.orderIndex;
+    });
   const boughtItems = items.filter(item => item.isBought);
 
   return {
