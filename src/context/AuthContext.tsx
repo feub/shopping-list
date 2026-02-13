@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { AuthService, SignUpData, SignInData } from '../services/supabase/auth';
+import { NotificationService } from '../services/notifications';
 import type { User, Session } from '@supabase/supabase-js';
 import Logger from '../utils/logger';
 
@@ -32,6 +33,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setSession(data.session);
           setUser(data.session?.user ?? null);
+          if (data.session?.user) {
+            NotificationService.registerForPushNotifications(data.session.user.id);
+          }
         }
       } catch (error) {
         Logger.error('Error initializing auth:', error);
@@ -49,6 +53,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       Logger.log('Auth state changed:', event);
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (event === 'SIGNED_IN' && session?.user) {
+        NotificationService.registerForPushNotifications(session.user.id);
+      }
 
       if (event === 'SIGNED_OUT') {
         setUser(null);
