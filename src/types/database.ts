@@ -100,6 +100,7 @@ export interface Database {
           last_synced_at: string | null;
           notes: string | null;
           quantity: number;
+          is_important: boolean;
         };
         Insert: {
           id?: string;
@@ -115,6 +116,7 @@ export interface Database {
           last_synced_at?: string | null;
           notes?: string | null;
           quantity?: number;
+          is_important?: boolean;
         };
         Update: {
           id?: string;
@@ -130,6 +132,7 @@ export interface Database {
           last_synced_at?: string | null;
           notes?: string | null;
           quantity?: number;
+          is_important?: boolean;
         };
       };
       saved_lists: {

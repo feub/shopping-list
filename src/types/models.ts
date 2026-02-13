@@ -33,6 +33,7 @@ export interface Item {
   listId: string;
   text: string;
   isBought: boolean;
+  isImportant: boolean;
   orderIndex: number;
   version: number;
   createdAt: string;

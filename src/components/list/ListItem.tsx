@@ -6,12 +6,13 @@ import type { Item } from '../../types/models';
 interface ListItemProps {
   item: Item;
   onToggle: (itemId: string, isBought: boolean) => void;
+  onToggleImportant?: (itemId: string, isImportant: boolean) => void;
   onPress?: (item: Item) => void;
   drag?: () => void;
   isActive?: boolean;
 }
 
-export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onPress, drag, isActive }) => {
+export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onToggleImportant, onPress, drag, isActive }) => {
   const { theme } = useTheme();
 
   const handleToggle = () => {
@@ -24,12 +25,18 @@ export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onPress, dra
     }
   };
 
+  const isVisiblyImportant = item.isImportant && !item.isBought;
+
   return (
     <View
       style={[
         styles.wrapper,
         {
-          backgroundColor: theme.colors.card,
+          backgroundColor: isVisiblyImportant ? theme.colors.warning + '12' : theme.colors.card,
+          ...(isVisiblyImportant && {
+            borderLeftWidth: 3,
+            borderLeftColor: theme.colors.warning,
+          }),
           ...(isActive && {
             shadowOpacity: 0.3,
             shadowRadius: 6,
@@ -79,11 +86,15 @@ export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onPress, dra
                 {
                   color: item.isBought ? theme.colors.textSecondary : theme.colors.text,
                   fontSize: theme.fontSizes.body,
+                  fontWeight: isVisiblyImportant ? '600' : '500',
                   textDecorationLine: item.isBought ? 'line-through' : 'none',
                 },
               ]}
               numberOfLines={2}
             >
+              {isVisiblyImportant && (
+                <Text style={{ color: theme.colors.warning }}>⚑ </Text>
+              )}
               {item.text}
             </Text>
             {item.quantity && (
@@ -100,6 +111,29 @@ export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onPress, dra
                   {item.quantity}
                 </Text>
               </View>
+            )}
+            {onToggleImportant && !item.isBought && (
+              <TouchableOpacity
+                style={[
+                  styles.importantButton,
+                  {
+                    backgroundColor: item.isImportant ? theme.colors.warning : theme.colors.background,
+                    borderColor: item.isImportant ? theme.colors.warning : theme.colors.border,
+                  },
+                ]}
+                onPress={() => onToggleImportant(item.id, !item.isImportant)}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              >
+                <Text
+                  style={{
+                    color: item.isImportant ? '#FFFFFF' : theme.colors.textSecondary,
+                    fontSize: theme.fontSizes.small,
+                    fontWeight: '700',
+                  }}
+                >
+                  !
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
           {item.notes && (
@@ -197,6 +231,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+  },
+  importantButton: {
+    marginLeft: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   quantity: {
     fontWeight: '700',
