@@ -55,6 +55,5 @@ export const DraggableList: React.FC<DraggableListProps> = ({
 const styles = StyleSheet.create({
   contentContainer: {
     flexGrow: 1,
-    paddingVertical: 8,
   },
 });
