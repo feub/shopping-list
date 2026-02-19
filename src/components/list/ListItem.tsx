@@ -33,14 +33,13 @@ export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onToggleImpo
         styles.wrapper,
         {
           backgroundColor: isVisiblyImportant ? theme.colors.warning + '12' : theme.colors.card,
+          borderBottomColor: theme.colors.border,
           ...(isVisiblyImportant && {
             borderLeftWidth: 3,
             borderLeftColor: theme.colors.warning,
           }),
           ...(isActive && {
-            shadowOpacity: 0.3,
-            shadowRadius: 6,
-            elevation: 8,
+            elevation: 4,
             transform: [{ scale: 1.02 }],
           }),
         },
@@ -172,20 +171,14 @@ export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onToggleImpo
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginHorizontal: 8,
-    marginVertical: 4,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E0E0E0',
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
   },
   dragHandle: {
     marginRight: 12,
