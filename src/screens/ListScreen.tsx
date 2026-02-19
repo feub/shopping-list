@@ -222,6 +222,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
 
   const handleAddToFavorites = async (item: Item) => {
     if (!user) return;
+    if (favoriteTexts.has(item.text.toLowerCase())) return;
     const quantity = item.quantity ? parseInt(item.quantity, 10) : undefined;
     const { error: favError } = await FavoritesService.createFavorite(
       user.id,
