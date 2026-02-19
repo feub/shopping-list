@@ -123,9 +123,14 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
   }, [currentListId, user, listSelectorVisible]);
 
   // Set up header with list selector and share buttons
+  const totalItems = unboughtItems.length + boughtItems.length;
+  const headerTitle = totalItems > 0
+    ? `${listName} (${boughtItems.length}/${totalItems})`
+    : listName;
+
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: listName,
+      headerTitle,
       headerLeft: () => (
         <TouchableOpacity
           onPress={() => setListSelectorVisible(true)}
@@ -163,7 +168,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
         </TouchableOpacity>
       ),
     });
-  }, [navigation, theme, memberCount, listName]);
+  }, [navigation, theme, memberCount, headerTitle]);
 
   // Refresh when tab comes into focus
   useFocusEffect(
