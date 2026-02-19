@@ -9,6 +9,8 @@ interface SwipeableItemProps {
   item: Item;
   onToggle: (itemId: string, isBought: boolean) => void;
   onToggleImportant?: (itemId: string, isImportant: boolean) => void;
+  onAddToFavorites?: (item: Item) => void;
+  favoriteTexts?: Set<string>;
   onDelete: (itemId: string) => void;
   onPress?: (item: Item) => void;
   drag?: () => void;
@@ -19,6 +21,8 @@ export const SwipeableItem: React.FC<SwipeableItemProps> = ({
   item,
   onToggle,
   onToggleImportant,
+  onAddToFavorites,
+  favoriteTexts,
   onDelete,
   onPress,
   drag,
@@ -67,7 +71,7 @@ export const SwipeableItem: React.FC<SwipeableItemProps> = ({
       overshootRight={false}
       enabled={!isActive}
     >
-      <ListItem item={item} onToggle={onToggle} onToggleImportant={onToggleImportant} onPress={onPress} drag={drag} isActive={isActive} />
+      <ListItem item={item} onToggle={onToggle} onToggleImportant={onToggleImportant} onAddToFavorites={onAddToFavorites} favoriteTexts={favoriteTexts} onPress={onPress} drag={drag} isActive={isActive} />
     </Swipeable>
   );
 };

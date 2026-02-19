@@ -315,18 +315,7 @@ export const SettingsScreen: React.FC<MainTabScreenProps<"Settings">> = () => {
             },
           ]}
         >
-          Shopping List App v1.2.0
-        </Text>
-        <Text
-          style={[
-            styles.footerText,
-            {
-              color: theme.colors.textSecondary,
-              fontSize: theme.fontSizes.small,
-            },
-          ]}
-        >
-          Built with React Native & Supabase
+          Shopping List App v1.3.0
         </Text>
       </View>
     </ScrollView>

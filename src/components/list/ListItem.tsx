@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import type { Item } from '../../types/models';
 
@@ -7,13 +8,30 @@ interface ListItemProps {
   item: Item;
   onToggle: (itemId: string, isBought: boolean) => void;
   onToggleImportant?: (itemId: string, isImportant: boolean) => void;
+  onAddToFavorites?: (item: Item) => void;
+  favoriteTexts?: Set<string>;
   onPress?: (item: Item) => void;
   drag?: () => void;
   isActive?: boolean;
 }
 
-export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onToggleImportant, onPress, drag, isActive }) => {
+export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onToggleImportant, onAddToFavorites, favoriteTexts, onPress, drag, isActive }) => {
   const { theme } = useTheme();
+  const isFavorite = favoriteTexts?.has(item.text.toLowerCase()) ?? false;
+  const [starFilled, setStarFilled] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const handleAddToFavorites = () => {
+    onAddToFavorites?.(item);
+    setStarFilled(true);
+    timerRef.current = setTimeout(() => setStarFilled(false), 1000);
+  };
 
   const handleToggle = () => {
     onToggle(item.id, !item.isBought);
@@ -110,6 +128,25 @@ export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onToggleImpo
                   {item.quantity}
                 </Text>
               </View>
+            )}
+            {onAddToFavorites && !item.isBought && (
+              <TouchableOpacity
+                style={[
+                  styles.favoriteButton,
+                  {
+                    backgroundColor: (isFavorite || starFilled) ? theme.colors.primary : theme.colors.background,
+                    borderColor: (isFavorite || starFilled) ? theme.colors.primary : theme.colors.border,
+                  },
+                ]}
+                onPress={handleAddToFavorites}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              >
+                <Ionicons
+                  name={(isFavorite || starFilled) ? 'star' : 'star-outline'}
+                  size={14}
+                  color={(isFavorite || starFilled) ? '#FFFFFF' : theme.colors.textSecondary}
+                />
+              </TouchableOpacity>
             )}
             {onToggleImportant && !item.isBought && (
               <TouchableOpacity
@@ -224,6 +261,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+  },
+  favoriteButton: {
+    marginLeft: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   importantButton: {
     marginLeft: 8,

@@ -11,6 +11,8 @@ interface DraggableListProps {
   onReorder: (items: Item[]) => void;
   onToggle: (itemId: string, isBought: boolean) => void;
   onToggleImportant?: (itemId: string, isImportant: boolean) => void;
+  onAddToFavorites?: (item: Item) => void;
+  favoriteTexts?: Set<string>;
   onDelete: (itemId: string) => void;
   onItemPress?: (item: Item) => void;
 }
@@ -20,6 +22,8 @@ export const DraggableList: React.FC<DraggableListProps> = ({
   onReorder,
   onToggle,
   onToggleImportant,
+  onAddToFavorites,
+  favoriteTexts,
   onDelete,
   onItemPress,
 }) => {
@@ -29,13 +33,15 @@ export const DraggableList: React.FC<DraggableListProps> = ({
         item={item}
         onToggle={onToggle}
         onToggleImportant={onToggleImportant}
+        onAddToFavorites={onAddToFavorites}
+        favoriteTexts={favoriteTexts}
         onDelete={onDelete}
         onPress={onItemPress}
         drag={drag}
         isActive={isActive}
       />
     ),
-    [onToggle, onToggleImportant, onDelete, onItemPress]
+    [onToggle, onToggleImportant, onAddToFavorites, favoriteTexts, onDelete, onItemPress]
   );
 
   const keyExtractor = useCallback((item: Item) => item.id, []);
