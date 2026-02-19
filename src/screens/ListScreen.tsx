@@ -13,6 +13,7 @@ import { SwipeableItem } from '../components/list/SwipeableItem';
 import { AddItemInput } from '../components/list/AddItemInput';
 import { ShareListModal } from '../components/list/ShareListModal';
 import { ListSelectorModal } from '../components/list/ListSelectorModal';
+import { SendBoughtListModal } from '../components/list/SendBoughtListModal';
 import type { MainTabScreenProps } from '../navigation/types';
 import { NotificationService } from '../services/notifications';
 import type { Item } from '../types/models';
@@ -29,6 +30,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
   const [currentUserRole, setCurrentUserRole] = useState<'viewer' | 'editor' | 'owner'>('owner');
   const [memberCount, setMemberCount] = useState(1);
   const [listName, setListName] = useState('Shopping List');
+  const [sendEmailModalVisible, setSendEmailModalVisible] = useState(false);
 
   const {
     unboughtItems,
@@ -296,11 +298,19 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
                 <Text style={[styles.boughtTitle, { color: theme.colors.textSecondary, fontSize: theme.fontSizes.body }]}>
                   Bought ({boughtItems.length})
                 </Text>
-                <TouchableOpacity onPress={handleClearBought}>
-                  <Text style={[styles.clearButton, { color: theme.colors.primary, fontSize: theme.fontSizes.small }]}>
-                    Clear
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.boughtActions}>
+                  <TouchableOpacity
+                    onPress={() => setSendEmailModalVisible(true)}
+                    style={styles.boughtActionButton}
+                  >
+                    <Ionicons name="mail-outline" size={18} color={theme.colors.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={handleClearBought}>
+                    <Text style={[styles.clearButton, { color: theme.colors.primary, fontSize: theme.fontSizes.small }]}>
+                      Clear
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
               <FlatList
                 data={boughtItems}
@@ -351,6 +361,15 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
           currentUserRole={currentUserRole}
         />
       )}
+
+      {/* Send Bought List Modal */}
+      <SendBoughtListModal
+        visible={sendEmailModalVisible}
+        onClose={() => setSendEmailModalVisible(false)}
+        boughtItems={boughtItems}
+        listName={listName}
+        currentUserEmail={user?.email ?? null}
+      />
     </View>
   );
 };
@@ -380,6 +399,14 @@ const styles = StyleSheet.create({
   },
   boughtTitle: {
     fontWeight: '600',
+  },
+  boughtActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  boughtActionButton: {
+    padding: 2,
   },
   clearButton: {
     fontWeight: '600',
