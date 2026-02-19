@@ -6,7 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../context/AuthContext';
 import { useList } from '../hooks/useList';
-import { ListsService } from '../services/supabase';
+import { ListsService, FavoritesService } from '../services/supabase';
+import Logger from '../utils/logger';
 import { DraggableList } from '../components/list/DraggableList';
 import { SwipeableItem } from '../components/list/SwipeableItem';
 import { AddItemInput } from '../components/list/AddItemInput';
@@ -44,6 +45,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
   } = useList(currentListId || '');
 
   const [refreshing, setRefreshing] = useState(false);
+  const [favoriteTexts, setFavoriteTexts] = useState<Set<string>>(new Set());
 
   // Initialize or get the user's primary list
   useEffect(() => {
@@ -170,13 +172,23 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
     });
   }, [navigation, theme, memberCount, headerTitle]);
 
+  // Fetch favorite texts for star indicator
+  const fetchFavorites = useCallback(async () => {
+    if (!user) return;
+    const { data } = await FavoritesService.getUserFavorites(user.id);
+    if (data) {
+      setFavoriteTexts(new Set(data.map((f: any) => f.text.toLowerCase())));
+    }
+  }, [user]);
+
   // Refresh when tab comes into focus
   useFocusEffect(
     useCallback(() => {
       if (currentListId) {
         refetch();
       }
-    }, [currentListId, refetch])
+      fetchFavorites();
+    }, [currentListId, refetch, fetchFavorites])
   );
 
   // Handle pull-to-refresh
@@ -204,6 +216,22 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
 
   const handleToggleImportant = (itemId: string, isImportant: boolean) => {
     updateItem(itemId, { isImportant });
+  };
+
+  const handleAddToFavorites = async (item: Item) => {
+    if (!user) return;
+    const quantity = item.quantity ? parseInt(item.quantity, 10) : undefined;
+    const { error: favError } = await FavoritesService.createFavorite(
+      user.id,
+      item.text,
+      isNaN(quantity as number) ? undefined : quantity,
+      item.notes || null,
+    );
+    if (favError) {
+      Logger.error('Failed to add item to favorites:', favError);
+    } else {
+      setFavoriteTexts(prev => new Set(prev).add(item.text.toLowerCase()));
+    }
   };
 
   const handleClearBought = () => {
@@ -255,6 +283,8 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
               onReorder={reorderItems}
               onToggle={toggleItem}
               onToggleImportant={handleToggleImportant}
+              onAddToFavorites={handleAddToFavorites}
+              favoriteTexts={favoriteTexts}
               onDelete={deleteItem}
             />
           </View>
