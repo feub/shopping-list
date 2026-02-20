@@ -15,7 +15,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { EmailService } from '../../services/email';
-import Logger from '../../utils/logger';
 import type { Item } from '../../types/models';
 
 interface SendBoughtListModalProps {
@@ -51,7 +50,6 @@ export const SendBoughtListModal: React.FC<SendBoughtListModalProps> = ({
     try {
       const { error } = await EmailService.sendBoughtList(toEmail, listName, boughtItems);
       if (error) {
-        Logger.error('Failed to send bought list:', error);
         Alert.alert('Error', error.message || 'Failed to send email. Please try again.');
       } else {
         Alert.alert('Sent!', `The bought list was sent to ${toEmail}.`, [
@@ -59,7 +57,6 @@ export const SendBoughtListModal: React.FC<SendBoughtListModalProps> = ({
         ]);
       }
     } catch (error) {
-      Logger.error('Unexpected error sending email:', error);
       Alert.alert('Error', 'An unexpected error occurred.');
     } finally {
       setSending(false);
