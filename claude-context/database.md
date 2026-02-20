@@ -124,7 +124,7 @@ Fires after INSERT on `auth.users`. Creates a profile row with email and display
 
 ## Migrations
 
-Stored in `supabase/migrations/`. 11 migration files (001 through 011) covering initial schema, favorites, FK fixes, RLS policy iterations, important items, and push tokens.
+Stored in `supabase/migrations/`. 12 migration files (001 through 012) covering initial schema, favorites, FK fixes, RLS policy iterations, important items, push tokens, and re-applied favorites RLS.
 
 ## Known Gotchas
 
