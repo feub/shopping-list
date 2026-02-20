@@ -245,10 +245,21 @@ export const useList = (listId: string) => {
 
   // Reorder items
   const reorderItems = useCallback(async (reorderedItems: Item[]) => {
-    // Optimistically update UI
-    setItems(reorderedItems);
+    isPerformingOperation.current = true;
 
-    // Update order indexes
+    // Optimistically update UI:
+    // - update orderIndex to match new positions
+    // - merge back with bought items (DraggableList only contains unbought items)
+    setItems(prev => {
+      const boughtItems = prev.filter(item => item.isBought);
+      const updatedUnbought = reorderedItems.map((item, index) => ({
+        ...item,
+        orderIndex: index,
+      }));
+      return [...updatedUnbought, ...boughtItems];
+    });
+
+    // Persist new order indexes
     const updates = reorderedItems.map((item, index) => ({
       id: item.id,
       orderIndex: index,
@@ -262,6 +273,10 @@ export const useList = (listId: string) => {
       // Revert on error
       fetchItems();
     }
+
+    setTimeout(() => {
+      isPerformingOperation.current = false;
+    }, 500);
   }, [fetchItems]);
 
   // Clear all bought items
