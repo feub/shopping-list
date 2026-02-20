@@ -1,8 +1,10 @@
 import React, { useCallback } from 'react';
 import { StyleSheet } from 'react-native';
-import DraggableFlatList, {
-  RenderItemParams,
-} from 'react-native-draggable-flatlist';
+import ReorderableList, {
+  useReorderableDrag,
+  useIsActive,
+  reorderItems,
+} from 'react-native-reorderable-list';
 import { SwipeableItem } from './SwipeableItem';
 import type { Item } from '../../types/models';
 
@@ -17,6 +19,23 @@ interface DraggableListProps {
   onItemPress?: (item: Item) => void;
 }
 
+interface ItemRowProps {
+  item: Item;
+  onToggle: (itemId: string, isBought: boolean) => void;
+  onToggleImportant?: (itemId: string, isImportant: boolean) => void;
+  onAddToFavorites?: (item: Item) => void;
+  favoriteTexts?: Set<string>;
+  onDelete: (itemId: string) => void;
+  onPress?: (item: Item) => void;
+}
+
+// Wrapper component so hooks can be used within the ReorderableList cell context
+const ItemRow: React.FC<ItemRowProps> = (props) => {
+  const drag = useReorderableDrag();
+  const isActive = useIsActive();
+  return <SwipeableItem {...props} drag={drag} isActive={isActive} />;
+};
+
 export const DraggableList: React.FC<DraggableListProps> = ({
   items,
   onReorder,
@@ -27,9 +46,16 @@ export const DraggableList: React.FC<DraggableListProps> = ({
   onDelete,
   onItemPress,
 }) => {
+  const handleReorder = useCallback(
+    ({ from, to }: { from: number; to: number }) => {
+      onReorder(reorderItems(items, from, to));
+    },
+    [items, onReorder]
+  );
+
   const renderItem = useCallback(
-    ({ item, drag, isActive }: RenderItemParams<Item>) => (
-      <SwipeableItem
+    ({ item }: { item: Item }) => (
+      <ItemRow
         item={item}
         onToggle={onToggle}
         onToggleImportant={onToggleImportant}
@@ -37,8 +63,6 @@ export const DraggableList: React.FC<DraggableListProps> = ({
         favoriteTexts={favoriteTexts}
         onDelete={onDelete}
         onPress={onItemPress}
-        drag={drag}
-        isActive={isActive}
       />
     ),
     [onToggle, onToggleImportant, onAddToFavorites, favoriteTexts, onDelete, onItemPress]
@@ -47,13 +71,13 @@ export const DraggableList: React.FC<DraggableListProps> = ({
   const keyExtractor = useCallback((item: Item) => item.id, []);
 
   return (
-    <DraggableFlatList
+    <ReorderableList
       data={items}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
-      onDragEnd={({ data }) => onReorder(data)}
+      onReorder={handleReorder}
+      shouldUpdateActiveItem
       contentContainerStyle={styles.contentContainer}
-      activationDistance={10}
     />
   );
 };
