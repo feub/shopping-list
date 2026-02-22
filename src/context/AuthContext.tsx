@@ -99,6 +99,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      if (user) {
+        await NotificationService.clearPushToken(user.id);
+      }
       const result = await AuthService.signOut();
       if (!result.error) {
         setUser(null);
