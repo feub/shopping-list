@@ -68,17 +68,19 @@ export const ListItem: React.FC<ListItemProps> = ({ item, onToggle, onToggleImpo
         onPress={handlePress}
         activeOpacity={onPress ? 0.7 : 1}
       >
-        {/* Drag handle - long press to drag */}
-        <Pressable
-          onLongPress={drag}
-          delayLongPress={150}
-          style={[styles.dragHandle, { opacity: drag ? 0.5 : 0.3 }]}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <View style={[styles.dragLine, { backgroundColor: theme.colors.textSecondary }]} />
-          <View style={[styles.dragLine, { backgroundColor: theme.colors.textSecondary }]} />
-          <View style={[styles.dragLine, { backgroundColor: theme.colors.textSecondary }]} />
-        </Pressable>
+        {/* Drag handle - long press to drag, hidden when not draggable */}
+        {drag && (
+          <Pressable
+            onLongPress={drag}
+            delayLongPress={150}
+            style={[styles.dragHandle, { opacity: 0.5 }]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <View style={[styles.dragLine, { backgroundColor: theme.colors.textSecondary }]} />
+            <View style={[styles.dragLine, { backgroundColor: theme.colors.textSecondary }]} />
+            <View style={[styles.dragLine, { backgroundColor: theme.colors.textSecondary }]} />
+          </Pressable>
+        )}
 
         <TouchableOpacity
           style={[
