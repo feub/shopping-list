@@ -315,7 +315,7 @@ export const SettingsScreen: React.FC<MainTabScreenProps<"Settings">> = () => {
             },
           ]}
         >
-          Shopping List App v1.3.2
+          Shopping List App v1.3.3
         </Text>
       </View>
     </ScrollView>

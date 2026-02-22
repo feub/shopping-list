@@ -74,6 +74,26 @@ export class NotificationService {
   }
 
   /**
+   * Clear the stored push token on sign-out so stale tokens are never used.
+   */
+  static async clearPushToken(userId: string): Promise<void> {
+    try {
+      const { error } = await (supabase
+        .from('profiles') as any)
+        .update({ push_token: null })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('[Notifications] Failed to clear token:', JSON.stringify(error));
+      } else {
+        console.log('[Notifications] Token cleared on sign-out');
+      }
+    } catch (error) {
+      console.error('[Notifications] Failed to clear token:', error);
+    }
+  }
+
+  /**
    * Notify other members of a shared list that a new item was added.
    * This is fire-and-forget — errors are logged but never thrown.
    */
