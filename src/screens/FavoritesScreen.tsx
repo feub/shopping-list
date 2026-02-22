@@ -10,6 +10,7 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../hooks/useTheme';
@@ -179,31 +180,32 @@ export const FavoritesScreen: React.FC<MainTabScreenProps<'Favorites'>> = () => 
         )}
         {item.notes && (
           <Text style={[styles.favoriteNotes, { color: theme.colors.textSecondary, fontSize: theme.fontSizes.small }]}>
-            💬 {item.notes}
+            {item.notes}
           </Text>
         )}
         {item.usage_count > 0 && (
           <Text style={[styles.usageCount, { color: theme.colors.textTertiary, fontSize: theme.fontSizes.small }]}>
-            Used {item.usage_count} time{item.usage_count !== 1 ? 's' : ''}
+            Used {item.usage_count}×
           </Text>
         )}
       </View>
       <View style={styles.favoriteActions}>
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
+          style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
           onPress={() => handleAddToList(item)}
         >
           <Text style={[styles.actionButtonText, { fontSize: theme.fontSizes.small }]}>+ Add</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: theme.colors.error }]}
+          style={styles.deleteButton}
           onPress={() => handleDeleteFavorite(item)}
         >
-          <Text style={[styles.actionButtonText, { fontSize: theme.fontSizes.small }]}>🗑</Text>
+          <Text style={[styles.deleteButtonText, { color: theme.colors.textTertiary }]}>🗑</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
+
 
   if (loading) {
     return (
@@ -246,7 +248,7 @@ export const FavoritesScreen: React.FC<MainTabScreenProps<'Favorites'>> = () => 
 
       {/* Add Favorite Modal */}
       <Modal visible={showAddModal} animationType="slide" presentationStyle="pageSheet">
-        <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
           <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
             <TouchableOpacity onPress={() => setShowAddModal(false)} disabled={saving}>
               <Text style={[styles.modalButton, { color: theme.colors.primary, fontSize: theme.fontSizes.body }]}>
@@ -330,7 +332,7 @@ export const FavoritesScreen: React.FC<MainTabScreenProps<'Favorites'>> = () => 
               editable={!saving}
             />
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
     </View>
   );
@@ -349,9 +351,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   favoriteCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -359,32 +364,42 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   favoriteContent: {
-    marginBottom: 12,
+    flex: 1,
+    marginRight: 8,
   },
   favoriteText: {
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   favoriteQuantity: {
-    marginTop: 4,
+    marginTop: 2,
   },
   favoriteNotes: {
     fontStyle: 'italic',
-    marginTop: 4,
+    marginTop: 2,
   },
   usageCount: {
-    marginTop: 4,
+    marginTop: 2,
   },
   favoriteActions: {
-    flexDirection: 'row',
-    gap: 8,
+    flexDirection: 'column',
+    gap: 6,
+    alignItems: 'flex-end',
   },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+  addButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
     alignItems: 'center',
+  },
+  deleteButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    fontSize: 14,
   },
   actionButtonText: {
     color: '#FFFFFF',
