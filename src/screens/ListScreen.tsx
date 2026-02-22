@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Alert, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Alert, ScrollView, RefreshControl, useWindowDimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +23,7 @@ const DEFAULT_LIST_KEY = 'default_list_id';
 export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation }) => {
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { height: screenHeight } = useWindowDimensions();
   const [currentListId, setCurrentListId] = useState<string | null>(null);
   const [initLoading, setInitLoading] = useState(true);
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -31,6 +32,7 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
   const [memberCount, setMemberCount] = useState(1);
   const [listName, setListName] = useState('Shopping List');
   const [sendEmailModalVisible, setSendEmailModalVisible] = useState(false);
+  const [isBoughtExpanded, setIsBoughtExpanded] = useState(false);
 
   const {
     unboughtItems,
@@ -296,9 +298,19 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
           {boughtItems.length > 0 && (
             <View style={[styles.boughtSection, { borderTopColor: theme.colors.border }]}>
               <View style={styles.boughtHeader}>
-                <Text style={[styles.boughtTitle, { color: theme.colors.textSecondary, fontSize: theme.fontSizes.body }]}>
-                  Bought ({boughtItems.length})
-                </Text>
+                <TouchableOpacity
+                  onPress={() => setIsBoughtExpanded(prev => !prev)}
+                  style={styles.boughtTitleButton}
+                >
+                  <Text style={[styles.boughtTitle, { color: theme.colors.textSecondary, fontSize: theme.fontSizes.body }]}>
+                    Bought ({boughtItems.length})
+                  </Text>
+                  <Ionicons
+                    name={isBoughtExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    color={theme.colors.textSecondary}
+                  />
+                </TouchableOpacity>
                 <View style={styles.boughtActions}>
                   <TouchableOpacity
                     onPress={() => setSendEmailModalVisible(true)}
@@ -313,18 +325,20 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
                   </TouchableOpacity>
                 </View>
               </View>
-              <FlatList
-                data={boughtItems}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <SwipeableItem
-                    item={item}
-                    onToggle={toggleItem}
-                    onDelete={deleteItem}
-                  />
-                )}
-                style={{ maxHeight: 200 }}
-              />
+              {isBoughtExpanded && (
+                <FlatList
+                  data={boughtItems}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <SwipeableItem
+                      item={item}
+                      onToggle={toggleItem}
+                      onDelete={deleteItem}
+                    />
+                  )}
+                  style={{ maxHeight: screenHeight * 0.5 }}
+                />
+              )}
             </View>
           )}
 
@@ -389,7 +403,6 @@ const styles = StyleSheet.create({
   },
   boughtSection: {
     borderTopWidth: 2,
-    maxHeight: 250,
   },
   boughtHeader: {
     flexDirection: 'row',
@@ -397,6 +410,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  boughtTitleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   boughtTitle: {
     fontWeight: '600',
