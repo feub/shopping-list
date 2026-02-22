@@ -41,7 +41,7 @@ export class NotificationService {
       // Set up Android notification channel
       if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
+          name: 'Shopping List',
           importance: Notifications.AndroidImportance.HIGH,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#FF8C00',
