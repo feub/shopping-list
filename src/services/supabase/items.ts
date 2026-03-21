@@ -15,6 +15,7 @@ export interface CreateItemData {
   notes?: string;
   orderIndex: number;
   isImportant?: boolean;
+  productId?: string;
 }
 
 export interface UpdateItemData {
@@ -84,7 +85,7 @@ export class ItemsService {
   /**
    * Create a new item
    */
-  static async createItem({ listId, text, quantity, notes, orderIndex, isImportant }: CreateItemData) {
+  static async createItem({ listId, text, quantity, notes, orderIndex, isImportant, productId }: CreateItemData) {
     try {
       validateItemText(text);
       if (quantity) {
@@ -106,6 +107,7 @@ export class ItemsService {
           is_important: isImportant || false,
           version: 1,
           created_by: user?.id || null,
+          product_id: productId || null,
         })
         .select(`
           *,

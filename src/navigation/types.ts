@@ -18,6 +18,7 @@ export type MainTabParamList = {
   List: undefined;
   SavedLists: undefined;
   Favorites: undefined;
+  Stock: undefined;
   Settings: undefined;
 };
 

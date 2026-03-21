@@ -16,7 +16,8 @@ import { ListSelectorModal } from '../components/list/ListSelectorModal';
 import { SendBoughtListModal } from '../components/list/SendBoughtListModal';
 import type { MainTabScreenProps } from '../navigation/types';
 import { NotificationService } from '../services/notifications';
-import type { Item } from '../types/models';
+import { ProductSearchDropdown } from '../components/stock/ProductSearchDropdown';
+import type { Item, Product } from '../types/models';
 
 const DEFAULT_LIST_KEY = 'default_list_id';
 
@@ -33,6 +34,9 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
   const [listName, setListName] = useState('Shopping List');
   const [sendEmailModalVisible, setSendEmailModalVisible] = useState(false);
   const [isBoughtExpanded, setIsBoughtExpanded] = useState(false);
+  const [dropdownQuery, setDropdownQuery] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | { id: ''; name: string } | null>(null);
+  const [addInputHeight, setAddInputHeight] = useState(0);
 
   const {
     unboughtItems,
@@ -202,8 +206,8 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
     setRefreshing(false);
   }, [refetch]);
 
-  const handleAddItem = async (text: string, quantity?: string, isImportant?: boolean) => {
-    await addItem(text, quantity, undefined, user?.email || undefined, isImportant);
+  const handleAddItem = async (text: string, quantity?: string, isImportant?: boolean, productId?: string) => {
+    await addItem(text, quantity, undefined, user?.email || undefined, isImportant, productId);
 
     // Fire-and-forget: notify other list members
     if (currentListId && user) {
@@ -273,7 +277,15 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Add item input - at top for better UX */}
-      <AddItemInput onAdd={handleAddItem} disabled={loading} />
+      <View onLayout={(e) => setAddInputHeight(e.nativeEvent.layout.height)}>
+        <AddItemInput
+          onAdd={handleAddItem}
+          disabled={loading}
+          onDropdownChange={setDropdownQuery}
+          selectedProduct={selectedProduct}
+          onProductConsumed={() => setSelectedProduct(null)}
+        />
+      </View>
 
       {loading && unboughtItems.length === 0 && boughtItems.length === 0 ? (
         <View style={styles.centerContainer}>
@@ -385,6 +397,24 @@ export const ListScreen: React.FC<MainTabScreenProps<'List'>> = ({ navigation })
         listName={listName}
         currentUserEmail={user?.email ?? null}
       />
+
+      {/* Product search dropdown — rendered last so it sits on top of the list */}
+      {dropdownQuery !== null && addInputHeight > 0 && (
+        <ProductSearchDropdown
+          query={dropdownQuery}
+          style={{
+            position: 'absolute',
+            top: addInputHeight,
+            left: 16,
+            right: 16,
+          }}
+          onSelect={(product) => {
+            setSelectedProduct(product);
+            setDropdownQuery(null);
+          }}
+          onDismiss={() => setDropdownQuery(null)}
+        />
+      )}
     </View>
   );
 };

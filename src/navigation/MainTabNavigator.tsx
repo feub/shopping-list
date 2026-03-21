@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ListScreen } from '../screens/ListScreen';
 import { SavedListsScreen } from '../screens/SavedListsScreen';
 import { FavoritesScreen } from '../screens/FavoritesScreen';
+import { StockScreen } from '../screens/StockScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import type { MainTabParamList } from './types';
 import { useTheme } from '../hooks/useTheme';
@@ -58,6 +59,17 @@ export const MainTabNavigator: React.FC = () => {
           tabBarLabel: 'Favorites',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="star-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Stock"
+        component={StockScreen}
+        options={{
+          title: 'Stock',
+          tabBarLabel: 'Stock',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="layers-outline" size={size} color={color} />
           ),
         }}
       />

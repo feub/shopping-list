@@ -1,33 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
+import type { Product } from '../../types/models';
 
 interface AddItemInputProps {
-  onAdd: (text: string, quantity?: string, isImportant?: boolean) => void;
+  onAdd: (text: string, quantity?: string, isImportant?: boolean, productId?: string) => void;
   disabled?: boolean;
+  /** Called when the search query changes so the parent can show/hide the dropdown. Pass null to hide. */
+  onDropdownChange?: (query: string | null) => void;
+  /** When the parent resolves a product selection, pass it here. Set back to null after consumption. */
+  selectedProduct?: Product | { id: ''; name: string } | null;
+  onProductConsumed?: () => void;
 }
 
-export const AddItemInput: React.FC<AddItemInputProps> = ({ onAdd, disabled }) => {
+export const AddItemInput: React.FC<AddItemInputProps> = ({
+  onAdd,
+  disabled,
+  onDropdownChange,
+  selectedProduct,
+  onProductConsumed,
+}) => {
   const { theme } = useTheme();
+  const quantityRef = useRef<TextInput>(null);
   const [text, setText] = useState('');
   const [quantity, setQuantity] = useState('');
   const [showQuantity, setShowQuantity] = useState(false);
   const [isImportant, setIsImportant] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
+
+  // Receive product selection from parent (ListScreen)
+  useEffect(() => {
+    if (selectedProduct) {
+      setText(selectedProduct.name);
+      setSelectedProductId(selectedProduct.id || undefined);
+      onProductConsumed?.();
+    }
+  }, [selectedProduct]);
 
   const handleAdd = () => {
     if (text.trim()) {
-      onAdd(text.trim(), quantity.trim() || undefined, isImportant || undefined);
+      onAdd(text.trim(), quantity.trim() || undefined, isImportant || undefined, selectedProductId);
       setText('');
       setQuantity('');
       setShowQuantity(false);
       setIsImportant(false);
+      setSelectedProductId(undefined);
+      onDropdownChange?.(null);
+    }
+  };
+
+  const handleTextChange = (value: string) => {
+    setText(value);
+    setSelectedProductId(undefined);
+    onDropdownChange?.(value.trim().length >= 2 ? value : null);
+  };
+
+  const handleBlur = () => {
+    // Small delay so taps on dropdown rows fire before it hides
+    setTimeout(() => onDropdownChange?.(null), 150);
+  };
+
+  const handleFocus = () => {
+    if (text.trim().length >= 2) {
+      onDropdownChange?.(text);
     }
   };
 
   const toggleQuantity = () => {
-    setShowQuantity(!showQuantity);
     if (showQuantity) {
       setQuantity('');
+      setShowQuantity(false);
+    } else {
+      setShowQuantity(true);
+      setTimeout(() => quantityRef.current?.focus(), 50);
     }
   };
 
@@ -43,21 +88,24 @@ export const AddItemInput: React.FC<AddItemInputProps> = ({ onAdd, disabled }) =
             {
               backgroundColor: theme.colors.background,
               color: theme.colors.text,
-              borderColor: theme.colors.border,
+              borderColor: selectedProductId ? theme.colors.primary : theme.colors.border,
               fontSize: theme.fontSizes.body,
             },
           ]}
           placeholder="Add item..."
           placeholderTextColor={theme.colors.textSecondary}
           value={text}
-          onChangeText={setText}
+          onChangeText={handleTextChange}
           onSubmitEditing={handleAdd}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           returnKeyType="done"
           editable={!disabled}
         />
 
         {showQuantity && (
           <TextInput
+            ref={quantityRef}
             style={[
               styles.quantityInput,
               {

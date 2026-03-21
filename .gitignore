@@ -45,3 +45,5 @@ yarn-error.*
 /supabase
 requirements.md
 debug_instructions.md
+DATABASE_GUIDE.md
+google-services.json
