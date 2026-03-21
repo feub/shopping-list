@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ItemsService, CreateItemData, UpdateItemData } from '../services/supabase';
+import { ItemsService, CreateItemData, UpdateItemData, StockService } from '../services/supabase';
 import { RealtimeService, ItemChange } from '../services/supabase/realtime';
 import type { Item } from '../types/models';
 import Logger from '../utils/logger';
@@ -39,6 +39,7 @@ export const useList = (listId: string) => {
         deletedAt: item.deleted_at || undefined,
         createdBy: item.created_by || undefined,
         createdByName: item.profiles?.display_name || item.profiles?.email || undefined,
+        productId: item.product_id || undefined,
       }));
       setItems(mappedItems);
     }
@@ -110,7 +111,7 @@ export const useList = (listId: string) => {
   }, [listId]);
 
   // Add a new item
-  const addItem = useCallback(async (text: string, quantity?: string, notes?: string, currentUserName?: string, isImportant?: boolean) => {
+  const addItem = useCallback(async (text: string, quantity?: string, notes?: string, currentUserName?: string, isImportant?: boolean, productId?: string) => {
     if (!listId) return;
 
     isPerformingOperation.current = true;
@@ -123,6 +124,7 @@ export const useList = (listId: string) => {
       notes,
       orderIndex,
       isImportant,
+      productId,
     });
 
     if (createError) {
@@ -148,6 +150,7 @@ export const useList = (listId: string) => {
         deletedAt: data.deleted_at || undefined,
         createdBy: data.created_by || undefined,
         createdByName: (data as any).profiles?.display_name || (data as any).profiles?.email || currentUserName || undefined,
+        productId: (data as any).product_id || undefined,
       };
       setItems(prev => [...prev, newItem]);
     }
@@ -191,6 +194,9 @@ export const useList = (listId: string) => {
   const toggleItem = useCallback(async (itemId: string, isBought: boolean) => {
     isPerformingOperation.current = true;
 
+    // Capture productId before the async call for stock increment below
+    const currentItem = items.find(item => item.id === itemId);
+
     const { data, error: toggleError } = await ItemsService.toggleItemBought(itemId, isBought);
 
     if (toggleError) {
@@ -218,10 +224,20 @@ export const useList = (listId: string) => {
       setItems(prev => prev.map(item => item.id === itemId ? updatedItem : item));
     }
 
+    // Auto-increment stock when item is marked as bought and linked to a product.
+    // Fire-and-forget: stock failure must never block or revert the toggle.
+    if (!toggleError && isBought && currentItem?.productId && listId) {
+      const delta = currentItem.quantity ? parseFloat(currentItem.quantity) : 1;
+      const stockDelta = isNaN(delta) || delta <= 0 ? 1 : delta;
+      StockService.incrementStock(currentItem.productId, listId, stockDelta).catch((err) => {
+        Logger.error('Stock auto-increment failed (non-critical):', err);
+      });
+    }
+
     setTimeout(() => {
       isPerformingOperation.current = false;
     }, 500);
-  }, []);
+  }, [items, listId]);
 
   // Delete an item
   const deleteItem = useCallback(async (itemId: string) => {

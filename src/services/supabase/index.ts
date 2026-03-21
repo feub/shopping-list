@@ -5,5 +5,8 @@ export { ItemsService } from './items';
 export { SavedListsService } from './savedLists';
 export { FavoritesService } from './favorites';
 export { ProfilesService } from './profiles';
+export { ProductsService } from './products';
+export { StockService } from './stock';
 export type { SignUpData, SignInData } from './auth';
 export type { CreateItemData, UpdateItemData } from './items';
+export type { StockRowWithProduct } from './stock';

@@ -43,6 +43,7 @@ export interface Item {
   notes?: string;
   createdBy?: string;
   createdByName?: string;
+  productId?: string;
 }
 
 export interface SavedList {
@@ -82,6 +83,25 @@ export type CreateSavedList = Omit<SavedList, 'id' | 'created_at' | 'updated_at'
 export type CreateSavedListItem = Omit<SavedListItem, 'id' | 'created_at'> & {
   id?: string;
 };
+
+export interface Product {
+  id: string;
+  name: string;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StockEntry {
+  id: string;
+  productId: string;
+  productName: string;
+  listId: string;
+  quantity: number;
+  unit: string | null;
+  updatedAt: string;
+  updatedBy: string | null;
+}
 
 // Update types
 export type UpdateItem = Partial<Omit<Item, 'id' | 'list_id' | 'created_at' | 'created_by'>>;

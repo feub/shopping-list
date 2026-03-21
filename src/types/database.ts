@@ -1,5 +1,5 @@
 // Database types for Supabase
-// These match the schema in supabase/migrations/001_initial_schema.sql
+// These match the schema in supabase/migrations/001_initial_schema.sql through 016
 
 export interface Database {
   public: {
@@ -104,6 +104,7 @@ export interface Database {
           notes: string | null;
           quantity: number;
           is_important: boolean;
+          product_id: string | null;
         };
         Insert: {
           id?: string;
@@ -120,6 +121,7 @@ export interface Database {
           notes?: string | null;
           quantity?: number;
           is_important?: boolean;
+          product_id?: string | null;
         };
         Update: {
           id?: string;
@@ -136,6 +138,7 @@ export interface Database {
           notes?: string | null;
           quantity?: number;
           is_important?: boolean;
+          product_id?: string | null;
         };
       };
       saved_lists: {
@@ -197,6 +200,58 @@ export interface Database {
           notes?: string | null;
           quantity?: number;
           created_at?: string;
+        };
+      };
+      products: {
+        Row: {
+          id: string;
+          name: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      stock: {
+        Row: {
+          id: string;
+          product_id: string;
+          list_id: string;
+          quantity: number;
+          unit: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          list_id: string;
+          quantity?: number;
+          unit?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          product_id?: string;
+          list_id?: string;
+          quantity?: number;
+          unit?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
         };
       };
       favorite_items: {
